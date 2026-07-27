@@ -1,0 +1,55 @@
+{
+  "users": [
+    {
+      "id": "14a96c02-8c46-4a0a-b627-a15e71193457",
+      "displayName": "Administrador",
+      "email": "admin123@test.com",
+      "password": "Zxcbnm12345",
+      "language": "fr",
+      "interests": [
+        "Viaje"
+      ],
+      "isGuest": false,
+      "createdAt": "2026-07-25T16:35:28.891Z"
+    },
+    {
+      "id": "4e11ff46-9a52-4c86-bf8d-ab5bd8e23d58",
+      "displayName": "Invitado_9436",
+      "language": "es",
+      "interests": [],
+      "isGuest": true,
+      "createdAt": "2026-07-25T16:44:22.305Z",
+      "expiresAt": "2026-07-26T16:44:22.305Z"
+    },
+    {
+      "id": "f35c715f-2f59-4ef2-9b0f-02ba42c98dc5",
+      "displayName": "Invitado_4013",
+      "language": "es",
+      "interests": [],
+      "isGuest": true,
+      "createdAt": "2026-07-27T01:01:06.510Z",
+      "expiresAt": "2026-07-28T01:01:06.510Z"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "67f2ef49-15cd-4bc1-abb7-5f5924d24ec7",
+      "name": "Prueba Sala",
+      "description": "",
+      "theme": "General",
+      "languages": [
+        "es"
+      ],
+      "createdBy": "14a96c02-8c46-4a0a-b627-a15e71193457",
+      "createdAt": "2026-07-25T16:50:17.762Z",
+      "isPrivate": false,
+      "inviteCode": "5SBX49",
+      "members": [
+        "14a96c02-8c46-4a0a-b627-a15e71193457",
+        "4e11ff46-9a52-4c86-bf8d-ab5bd8e23d58",
+        "f35c715f-2f59-4ef2-9b0f-02ba42c98dc5"
+      ]
+    }
+  ],
+  "messages": []
+}
