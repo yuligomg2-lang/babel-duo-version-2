@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import dns from "node:dns";
+import { connectDB } from "./config/db.js";
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
@@ -23,7 +24,13 @@ app.get("/", (req, res) => {
 //// o utiliza el puerto 3000 por defecto.
 const PORT = process.env.PORT || 3000;
 
-//Inicio del servidor
-app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+
+  //Inicio del servidor
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
+  });
+};
+
+startServer();

@@ -1,11 +1,5 @@
 import { motion } from "motion/react";
-import {
-  Mail,
-  Lock,
-  CheckCircle2,
-  AlertCircle,
-  User as UserIcon,
-} from "lucide-react";
+import { Mail, Lock, AlertCircle, User as UserIcon } from "lucide-react";
 import googleLogo from "../../assets/img/logogoogle.png";
 
 /**
@@ -33,8 +27,7 @@ interface RegisterFormProps {
   handleEmailSignUp: (e: React.FormEvent) => void;
   handleGoogleSignIn: () => void;
 
-  // Cambia entre Login, Registro y Recuperación de contraseña
-  setAuthMode: (mode: "login" | "register" | "forgot") => void;
+  onLogin: () => void;
 
   // Métodos para administrar los mensajes mostrados al usuario
   setError: (value: string | null) => void;
@@ -59,7 +52,7 @@ export default function RegisterForm({
   setPassword,
   handleEmailSignUp,
   handleGoogleSignIn,
-  setAuthMode,
+  onLogin,
   setError,
   setSuccessMessage,
 }: RegisterFormProps) {
@@ -172,7 +165,7 @@ export default function RegisterForm({
             <button
               type="button"
               onClick={() => {
-                setAuthMode("login");
+                onLogin();
                 setError(null);
                 setSuccessMessage(null);
               }}

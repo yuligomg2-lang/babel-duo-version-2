@@ -12,10 +12,6 @@ export function useAuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  // Estado encargado de controlar el formulario activo
-  const [authMode, setAuthMode] = useState<"login" | "register" | "forgot">(
-    "login",
-  );
 
   // Estados utilizados para almacenar la información
   // ingresada por el usuario en los formularios
@@ -37,9 +33,6 @@ export function useAuthForm() {
 
     successMessage,
     setSuccessMessage,
-
-    authMode,
-    setAuthMode,
 
     email,
     setEmail,

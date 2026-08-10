@@ -25,8 +25,8 @@ interface LoginFormProps {
   handleGoogleSignIn: () => void;
   handleGuestSignIn: () => void;
 
-  // Cambia entre Login, Registro y Recuperación de contraseña
-  setAuthMode: (mode: "login" | "register" | "forgot") => void;
+  onRegister: () => void;
+  onForgotPassword: () => void;
 
   // Métodos para administrar los mensajes mostrados al usuario
   setError: (value: string | null) => void;
@@ -50,7 +50,8 @@ export default function LoginForm({
   handleEmailSignIn,
   handleGoogleSignIn,
   handleGuestSignIn,
-  setAuthMode,
+  onRegister,
+  onForgotPassword,
   setError,
   setSuccessMessage,
 }: LoginFormProps) {
@@ -129,9 +130,9 @@ export default function LoginForm({
           <button
             type="button"
             onClick={() => {
-              setAuthMode("forgot");
               setError(null);
               setSuccessMessage(null);
+              onForgotPassword();
             }}
             className="text-xs font-bold text-[#ff6000] hover:text-[#e05300] hover:underline cursor-pointer transition-colors"
             disabled={loading}
@@ -188,9 +189,9 @@ export default function LoginForm({
             <button
               type="button"
               onClick={() => {
-                setAuthMode("register");
                 setError(null);
                 setSuccessMessage(null);
+                onRegister();
               }}
               className="text-[#ff6000] font-bold hover:text-[#e05300] hover:underline transition-all cursor-pointer"
               disabled={loading}

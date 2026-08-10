@@ -1,8 +1,11 @@
 import "./App.css";
 import { useState } from "react";
-import { Auth } from "./components/auth/Auth";
 import type { UserProfile } from "./types";
 import MainLayout from "./components/Layout/MainLayout";
+import Login from "./pages/Login";
+import { Navigate, Route, Routes } from "react-router-dom";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
   // Inicializar el usuario desde localStorage (persistencia de sesión)
@@ -19,11 +22,37 @@ function App() {
     return null;
   });
 
-  if (!user) {
-    return <Auth user={user} onUserUpdate={setUser} />;
-  }
+  return (
+    <Routes>
+      {/* Autenticación */}
+      <Route
+        path="/login"
+        element={<Login user={user} onUserUpdate={setUser} />}
+      />
 
-  return <MainLayout user={user} onUserUpdate={setUser} />;
+      <Route path="/register" element={<Register />} />
+
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* Aplicación principal */}
+      <Route
+        path="/chat"
+        element={
+          user ? (
+            <MainLayout user={user} onUserUpdate={setUser} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      {/* Ruta por defecto */}
+      <Route
+        path="*"
+        element={<Navigate to={user ? "/chat" : "/login"} replace />}
+      />
+    </Routes>
+  );
 }
 
 export default App;

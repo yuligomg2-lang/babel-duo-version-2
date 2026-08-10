@@ -2,6 +2,7 @@ import { Copy, Send, Share2, X } from "lucide-react";
 import { motion } from "motion/react";
 import type React from "react";
 import type { Room } from "../../types";
+import { useState } from "react";
 
 /**
  * Propiedades que recibe el modal para compartir una sala.
@@ -19,8 +20,33 @@ const ShareRoomModal: React.FC<ShareRoomModalProps> = ({
   onClose,
   onSendInviteCode,
 }) => {
+  // Indica si el código acaba de copiarse.
+  const [copied, setCopied] = useState(false);
+
   // Si el modal está cerrado no se renderiza ningún elemento.
   if (!isOpen) return null;
+
+  const handleCopyCode = async () => {
+    await navigator.clipboard.writeText(room.inviteCode);
+
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
+
+  const handleCopyInvitation = async () => {
+    const text = `¡Únete a mi sala "${room.name}" en BabelDuo!
+    Código: ${room.inviteCode}
+    ${window.location.origin}`;
+
+    await navigator.clipboard.writeText(text);
+
+    onClose();
+
+    alert("Enlace e invitación completos copiados.");
+  };
   return (
     /* Fondo oscuro que bloquea la interacción con el resto de la aplicación */
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
@@ -70,19 +96,12 @@ const ShareRoomModal: React.FC<ShareRoomModalProps> = ({
             <div className="grid grid-cols-2 gap-2 w-full mt-2">
               {/* Copia únicamente el código de invitación */}
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(room.inviteCode);
-                  const btn = document.getElementById("copy-btn");
-                  if (btn) btn.innerText = "¡Copiado!";
-                  setTimeout(() => {
-                    if (btn) btn.innerText = "Copiar Código";
-                  }, 2000);
-                }}
+                onClick={handleCopyCode}
                 id="copy-btn"
                 className="py-3 bg-white border border-gray-200/50 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
               >
                 <Copy className="w-4 h-4" />
-                Copiar Código
+                {copied ? "¡Copiado!" : "Copiar Código"}
               </button>
 
               {/* Envía el código directamente al chat y cierra el modal */}
@@ -102,12 +121,7 @@ const ShareRoomModal: React.FC<ShareRoomModalProps> = ({
           {/* Copia una invitación completa con el nombre de la sala, código y enlace */}
           <div className="mt-6">
             <button
-              onClick={() => {
-                const text = `¡Únete a mi sala "${room.name}" en BabelDuo!\nCódigo: ${room.inviteCode}\n${window.location.origin}`;
-                navigator.clipboard.writeText(text);
-                onClose();
-                alert("Enlace e invitación completos copiados.");
-              }}
+              onClick={handleCopyInvitation}
               className="w-full bg-[#0a3d70] text-white rounded-2xl py-3.5 text-xs font-bold shadow-lg shadow-sky-100 hover:bg-[#082a4d] transition-all active:scale-95"
             >
               Copiar Invitación Completa

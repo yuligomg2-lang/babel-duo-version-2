@@ -23,7 +23,7 @@ interface ForgotPasswordFormProps {
   handleForgotPassword: (e: React.FormEvent) => void;
 
   // Cambia entre Login, Registro y Recuperación de contraseña
-  setAuthMode: (mode: "login" | "register" | "forgot") => void;
+  onLogin: () => void;
 
   // Métodos para administrar los mensajes mostrados al usuario
   setError: (value: string | null) => void;
@@ -42,7 +42,7 @@ export default function ForgotPasswordForm({
   successMessage,
   setEmail,
   handleForgotPassword,
-  setAuthMode,
+  onLogin,
   setError,
   setSuccessMessage,
 }: ForgotPasswordFormProps) {
@@ -104,9 +104,9 @@ export default function ForgotPasswordForm({
           <button
             type="button"
             onClick={() => {
-              setAuthMode("login");
               setError(null);
               setSuccessMessage(null);
+              onLogin();
             }}
             className="text-xs font-bold text-[#ff6000] hover:text-[#e05300] hover:underline transition-all flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
             disabled={loading}

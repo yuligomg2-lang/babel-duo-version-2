@@ -1,53 +1,78 @@
 {
   "users": [
     {
-      "id": "14a96c02-8c46-4a0a-b627-a15e71193457",
-      "displayName": "Administrador",
-      "email": "admin123@test.com",
-      "password": "Zxcbnm12345",
-      "language": "fr",
-      "interests": [
-        "Viaje"
-      ],
+      "id": "b93fdca2-d489-47fc-8ee2-6c6c83139e60",
+      "displayName": "Juliet Gomez",
+      "email": "yuligomg@gmail.com",
+      "password": "Juliet123",
+      "language": "es",
+      "interests": [],
       "isGuest": false,
-      "createdAt": "2026-07-25T16:35:28.891Z"
+      "createdAt": "2026-07-28T05:36:38.599Z"
     },
     {
-      "id": "4e11ff46-9a52-4c86-bf8d-ab5bd8e23d58",
-      "displayName": "Invitado_9436",
+      "id": "c9f3fb2f-1043-497a-a744-7f87b3d3b5a5",
+      "displayName": "Invitado_4840",
       "language": "es",
       "interests": [],
       "isGuest": true,
-      "createdAt": "2026-07-25T16:44:22.305Z",
-      "expiresAt": "2026-07-26T16:44:22.305Z"
+      "createdAt": "2026-08-09T03:34:47.878Z",
+      "expiresAt": "2026-08-10T03:34:47.878Z"
     },
     {
-      "id": "f35c715f-2f59-4ef2-9b0f-02ba42c98dc5",
-      "displayName": "Invitado_4013",
+      "id": "2de441b5-09a7-4e31-98fa-544900ab9276",
+      "displayName": "Invitado_4443",
       "language": "es",
       "interests": [],
       "isGuest": true,
-      "createdAt": "2026-07-27T01:01:06.510Z",
-      "expiresAt": "2026-07-28T01:01:06.510Z"
+      "createdAt": "2026-08-09T10:43:38.699Z",
+      "expiresAt": "2026-08-10T10:43:38.699Z"
+    },
+    {
+      "id": "fb57d3a8-051f-4ac1-bfe5-e1238f51bb05",
+      "displayName": "Invitado_6124",
+      "language": "es",
+      "interests": [],
+      "isGuest": true,
+      "createdAt": "2026-08-09T21:36:26.887Z",
+      "expiresAt": "2026-08-10T21:36:26.887Z"
+    },
+    {
+      "id": "da53ae3c-f106-4187-a972-2839ecaef98d",
+      "displayName": "Admin",
+      "email": "admin123@gmail.com",
+      "password": "Admin123",
+      "language": "de",
+      "interests": [],
+      "isGuest": false,
+      "createdAt": "2026-08-09T22:56:08.874Z"
+    },
+    {
+      "id": "2addcc5d-ed9d-4dbd-a18f-00cdedb8c0ef",
+      "displayName": "Invitado_2374",
+      "language": "es",
+      "interests": [],
+      "isGuest": true,
+      "createdAt": "2026-08-10T01:58:59.813Z",
+      "expiresAt": "2026-08-11T01:58:59.813Z"
     }
   ],
   "rooms": [
     {
-      "id": "67f2ef49-15cd-4bc1-abb7-5f5924d24ec7",
-      "name": "Prueba Sala",
+      "id": "7643abc6-5072-4be1-9ce4-2607c35ec749",
+      "name": "Prueba",
       "description": "",
       "theme": "General",
       "languages": [
         "es"
       ],
-      "createdBy": "14a96c02-8c46-4a0a-b627-a15e71193457",
-      "createdAt": "2026-07-25T16:50:17.762Z",
+      "createdBy": "b93fdca2-d489-47fc-8ee2-6c6c83139e60",
+      "createdAt": "2026-08-09T00:24:23.182Z",
       "isPrivate": false,
-      "inviteCode": "5SBX49",
+      "inviteCode": "3WFCIV",
       "members": [
-        "14a96c02-8c46-4a0a-b627-a15e71193457",
-        "4e11ff46-9a52-4c86-bf8d-ab5bd8e23d58",
-        "f35c715f-2f59-4ef2-9b0f-02ba42c98dc5"
+        "b93fdca2-d489-47fc-8ee2-6c6c83139e60",
+        "c9f3fb2f-1043-497a-a744-7f87b3d3b5a5"
       ]
     }
   ],

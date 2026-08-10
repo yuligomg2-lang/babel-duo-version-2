@@ -1,22 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { Room, UserProfile, Message } from "../../types";
-import { LANGUAGES } from "../../types";
-import {
-  Send,
-  Mic,
-  Square,
-  Loader2,
-  X,
-  Share2,
-  Trash2,
-  LogOut,
-  Copy,
-  AlertCircle,
-} from "lucide-react";
+import { Share2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import { API_URL } from "../../services/api";
+import ShareRoomModal from "./ShareRoomModal";
+import ChatInput from "./ChatInput";
+import RoomDetails from "./RoomDetails";
+import { useChatMessages } from "../../hooks/useChatMessages";
 
 interface ChatRoomProps {
   room: Room;
@@ -31,10 +23,17 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   onBack,
   onUserUpdate,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
+  const {
+    messages,
+    setMessages,
+    inputText,
+    setInputText,
+    typingUsers,
+    setTypingUsers,
+    error,
+    setError,
+  } = useChatMessages();
+
   const [loadingAction, setLoadingAction] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isTTSLoading, setIsTTSLoading] = useState<string | null>(null); // messageId
@@ -221,11 +220,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setInputText("");
 
     console.log("Mensaje simulado:", newMessage);
-  };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(room.inviteCode);
-    // Visual feedback handled by state or just keep simple for now
   };
 
   const handleShare = () => {
@@ -467,92 +461,16 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       {/* Área principal donde se muestra la conversación activa */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         <AnimatePresence>
-          {isShareModalOpen && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl"
-              >
-                <div className="p-8">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#0a3d70]/5 to-[#ff6000]/5 rounded-2xl flex items-center justify-center">
-                      <Share2 className="w-8 h-8 text-[#0a3d70]" />
-                    </div>
-                    <button
-                      onClick={() => setIsShareModalOpen(false)}
-                      className="p-2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-6 h-6" />
-                    </button>
-                  </div>
-
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Compartir Sala
-                  </h3>
-                  <p className="text-gray-500 text-sm mb-6">
-                    Cualquiera con este código puede unirse a la conversación.
-                  </p>
-
-                  <div className="bg-gray-50/70 border border-gray-100/50 rounded-2xl p-6 flex flex-col items-center gap-4 relative group">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
-                      Código de Invitación
-                    </span>
-                    <div className="text-4xl font-black text-gray-900 tracking-wider">
-                      {room.inviteCode}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 w-full mt-2">
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(room.inviteCode);
-                          const btn = document.getElementById("copy-btn");
-                          if (btn) btn.innerText = "¡Copiado!";
-                          setTimeout(() => {
-                            if (btn) btn.innerText = "Copiar Código";
-                          }, 2000);
-                        }}
-                        id="copy-btn"
-                        className="py-3 bg-white border border-gray-200/50 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copiar Código
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          handleSendInviteCodeToChat();
-                          setIsShareModalOpen(false);
-                        }}
-                        className="py-3 bg-[#0a3d70] hover:bg-[#082a4d] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
-                      >
-                        <Send className="w-3.5 h-3.5 fill-white text-white" />
-                        Enviar al Chat
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <button
-                      onClick={() => {
-                        const text = `¡Únete a mi sala "${room.name}" en BabelDuo!\nCódigo: ${room.inviteCode}\n${window.location.origin}`;
-                        navigator.clipboard.writeText(text);
-                        setIsShareModalOpen(false);
-                        alert("Enlace e invitación completos copiados.");
-                      }}
-                      className="w-full bg-[#0a3d70] text-white rounded-2xl py-3.5 text-xs font-bold shadow-lg shadow-sky-100 hover:bg-[#082a4d] transition-all active:scale-95"
-                    >
-                      Copiar Invitación Completa
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
+          {/* Modal para compartir la sala */}
+          <ShareRoomModal
+            isOpen={isShareModalOpen}
+            room={room}
+            onClose={() => setIsShareModalOpen(false)}
+            onSendInviteCode={handleSendInviteCodeToChat}
+          />
         </AnimatePresence>
 
-        {/* Header (with WhatsApp mock Phone, Video, Share, Exit/Delete, and Sidebar toggle Info button styled in deep green/teal) */}
+        {/* Header del chat */}
         <ChatHeader
           room={room}
           isOwner={isOwner}
@@ -565,7 +483,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           onLeaveRoom={handleLeaveRoom}
         />
 
-        {/* Messages Scroll Area with classic Doodle Wallpaper or modern minimalist backdrops */}
+        {/* Mensajes */}
         <ChatMessages
           messages={messages}
           user={user}
@@ -576,6 +494,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           getTranslation={() => {}}
           handleSpeak={handleSpeak}
         />
+
         {/* const color = getUserColor(msg.senderId); */}
         {/* Typing Indicator */}
         <AnimatePresence>
@@ -587,7 +506,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         </AnimatePresence>
 
         {/* Bottom Input Drawer styled like WhatsApp Input Dock */}
-        <div className="p-3 bg-[#f0f2f5] border-t border-gray-205/30 safe-area-bottom">
+        <div>
           {window.self !== window.top ? (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
@@ -639,249 +558,39 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             )
           )}
 
-          {isRecording ? (
-            <div className="flex items-center justify-between bg-red-50 border border-red-100 p-1.5 rounded-xl animate-pulse">
-              <div className="flex items-center gap-2 px-2 select-none">
-                <div className="w-2 h-2 bg-red-500 rounded-full" />
-                <span className="text-xs font-bold text-red-600 animate-pulse">
-                  Grabando audio... {formatDuration(recordDuration)}
-                </span>
-              </div>
-              <button
-                onClick={stopRecording}
-                className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
-              >
-                <Square className="w-4 h-4 fill-current" />
-              </button>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSendMessage}
-              className="flex gap-2.5 items-center"
-            >
-              <button
-                type="button"
-                onClick={startRecording}
-                title="Grabar mensaje de voz con traducción automática"
-                className="p-2.5 bg-white text-gray-500 rounded-full hover:bg-gray-100 hover:text-[#ff6000] border border-gray-200/50 transition-all shrink-0"
-              >
-                <Mic className="w-4.5 h-4.5" />
-              </button>
-
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="flex-1 h-12 bg-white border border-gray-200/60 rounded-full px-5 py-3 text-sm outline-none focus:ring-1 focus:ring-[#0a3d70]/30 transition-shadow text-gray-800 placeholder-[#767676]"
-                placeholder="Escribe un mensaje..."
-                disabled={loadingAction}
-              />
-
-              <button
-                type="submit"
-                disabled={!inputText.trim() || loadingAction}
-                className="p-2.5 bg-[#0a3d70] text-white rounded-full hover:bg-[#082a4d] transition-transform disabled:opacity-40 disabled:hover:bg-[#0a3d70] disabled:scale-100 shrink-0 shadow-sm"
-              >
-                {loadingAction ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4 fill-white" />
-                )}
-              </button>
-            </form>
-          )}
+          {/* Campo para escribir y enviar mensajes */}
+          <ChatInput
+            inputText={inputText}
+            setInputText={setInputText}
+            handleSendMessage={handleSendMessage}
+            loadingAction={loadingAction}
+            isRecording={isRecording}
+            recordDuration={recordDuration}
+            startRecording={startRecording}
+            stopRecording={stopRecording}
+            formatDuration={formatDuration}
+          />
         </div>
       </div>
 
       {/* Panel lateral derecho con detalles de la sala */}
-      {isSidebarOpen && (
-        <div className="hidden md:flex w-[320px] lg:w-[345px] border-l border-gray-200/25 bg-white flex-col h-full overflow-y-auto shrink-0 animate-in slide-in-from-right-10 duration-200 shadow-sm">
-          {/* Header of details sidebar corresponding to Canva clean theme */}
-          <div className="p-4 bg-[#f0f2f5] border-b border-gray-200/25 flex items-center justify-between select-none">
-            <span className="text-xs font-bold text-gray-700 font-sans tracking-wide">
-              Información y Ajustes
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen(false)}
-              className="text-gray-400 hover:text-gray-600 text-xs font-semibold px-2 py-1 rounded hover:bg-gray-200/40"
-            >
-              Cerrar
-            </button>
-          </div>
-
-          <div className="p-5 flex flex-col gap-6">
-            {/* Cambiar el fondo del chat */}
-            <div className="flex flex-col gap-2.5">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
-                Theme
-              </span>
-              <div className="flex items-center justify-between p-3.5 bg-gray-50/70 border border-gray-100 rounded-2xl">
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-gray-800">
-                    Doodle clásico
-                  </span>
-                  <span className="text-[10px] text-gray-400 font-medium font-sans">
-                    Fondo estilo WhatsApp
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setThemeMode((prev) =>
-                      prev === "classic" ? "modern" : "classic",
-                    )
-                  }
-                  className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 focus:outline-none relative shrink-0 ${
-                    themeMode === "classic" ? "bg-[#005c53]" : "bg-gray-200"
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white shadow-md transform duration-200 ${
-                      themeMode === "classic"
-                        ? "translate-x-5"
-                        : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Selección del idioma de traducción */}
-            <div className="flex flex-col gap-2.5">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
-                Translation Language
-              </span>
-              <div className="relative">
-                <select
-                  value={user.language}
-                  onChange={(e) => handleUpdateUserLanguage(e.target.value)}
-                  disabled={isUpdatingLang}
-                  className="w-full bg-white border border-gray-200/80 text-gray-800 text-xs rounded-xl px-3.5 py-3 h-[45px] outline-none focus:ring-1 focus:ring-[#005c53] font-semibold cursor-pointer transition-shadow shadow-sm"
-                >
-                  {LANGUAGES.map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name} ({lang.code.toUpperCase()})
-                    </option>
-                  ))}
-                </select>
-                {isUpdatingLang && (
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-450" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Información de los participantes de la sala */}
-            <div className="flex flex-col gap-2.5">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
-                Room Members
-              </span>
-              {/* Lista de usuarios que pertenecen a la sala */}
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-3">
-                {roomMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center gap-3 py-2 border-b last:border-b-0"
-                  >
-                    {/* Avatar generado a partir de la inicial del usuario */}
-                    <div className="w-8 h-8 rounded-full bg-[#005c53] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {member.displayName.charAt(0).toUpperCase()}
-                    </div>
-
-                    {/* Información del miembro */}
-                    <div>
-                      <p className="text-xs font-semibold text-gray-800">
-                        {member.displayName}
-                      </p>
-
-                      <p className="text-[10px] text-gray-500">
-                        {member.language.toUpperCase()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Código de invitación */}
-            <div className="flex flex-col gap-2.5">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
-                Room Code
-              </span>
-              {/* Código para compartir la sala */}
-              <div className="flex flex-col gap-2.5">
-                <div className="bg-gray-50 border border-gray-150/50 rounded-xl p-3 text-center select-all font-mono font-bold text-[12px] tracking-wider text-gray-600 shadow-inner">
-                  {room.inviteCode || room.id}
-                </div>
-                {/* Copiar el código */}
-                <div className="grid grid-cols-2 gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(room.inviteCode);
-                      setCopiedCodeFeedback(true);
-                      setTimeout(() => setCopiedCodeFeedback(false), 2000);
-                    }}
-                    className={`w-full py-2.5 border rounded-xl font-bold text-xs transition-all active:scale-[0.98] select-none flex items-center justify-center gap-1.5 ${
-                      copiedCodeFeedback
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                        : "border-gray-200/50 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    {copiedCodeFeedback ? "Copiado" : "Copiar"}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Separador */}
-            <div className="w-full h-[1px] bg-gray-100/30 my-1" />
-
-            {/* Ajustes de la sala */}
-            <div className="flex flex-col gap-2.5">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
-                Ajustes de Sala
-              </span>
-              {/* Si el usuario es el creador de la sala, puede eliminarla */}
-              <div className="flex flex-col gap-2">
-                {isOwner ? (
-                  <button
-                    type="button"
-                    onClick={handleDeleteRoom}
-                    disabled={loadingAction}
-                    className="w-full py-2.5 px-3 border border-red-150 hover:bg-red-50 text-red-600 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                  >
-                    {loadingAction ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                    Eliminar Sala
-                  </button>
-                ) : (
-                  /* Los demás participantes solo pueden abandonar la sala */
-                  <button
-                    type="button"
-                    onClick={handleLeaveRoom}
-                    disabled={loadingAction}
-                    className="w-full py-2.5 px-3 border border-red-100 bg-red-55/10 hover:bg-red-50 text-red-550 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                  >
-                    {loadingAction ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-red-400" />
-                    ) : (
-                      <LogOut className="w-4 h-4" />
-                    )}
-                    Salir del Grupo / Sala
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <RoomDetails
+        isOpen={isSidebarOpen}
+        room={room}
+        user={user}
+        roomMembers={roomMembers}
+        isOwner={isOwner}
+        themeMode={themeMode}
+        setThemeMode={setThemeMode}
+        isUpdatingLang={isUpdatingLang}
+        handleUpdateUserLanguage={handleUpdateUserLanguage}
+        copiedCodeFeedback={copiedCodeFeedback}
+        setCopiedCodeFeedback={setCopiedCodeFeedback}
+        loadingAction={loadingAction}
+        handleDeleteRoom={handleDeleteRoom}
+        handleLeaveRoom={handleLeaveRoom}
+        onClose={() => setIsSidebarOpen(false)}
+      />
     </div>
   );
 };
