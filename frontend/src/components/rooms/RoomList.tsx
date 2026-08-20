@@ -14,6 +14,14 @@ interface RoomListProps {
   selectedRoomId?: string;
 }
 
+interface NewRoom {
+  name: string;
+  description: string;
+  theme: string;
+  languages: string[];
+  isPrivate: boolean;
+}
+
 export const RoomList: React.FC<RoomListProps> = ({
   user,
   onSelectRoom,
@@ -26,7 +34,13 @@ export const RoomList: React.FC<RoomListProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [joinCode, setJoinCode] = useState("");
-  const [newRoom, setNewRoom] = useState({ name: "", theme: "" });
+  const [newRoom, setNewRoom] = useState<NewRoom>({
+    name: "",
+    description: "",
+    theme: "General",
+    languages: ["es"],
+    isPrivate: false,
+  });
 
   /**
    * Obtiene las salas del usuario autenticado.
@@ -37,7 +51,7 @@ export const RoomList: React.FC<RoomListProps> = ({
 
     try {
       // Obtener todas las salas registradas
-      const response = await fetch(`${API_URL}/rooms`);
+      const response = await fetch(`${API_URL}/api/rooms/list`);
 
       // Verificar que la petición fue exitosa
       if (!response.ok) {
@@ -65,51 +79,59 @@ export const RoomList: React.FC<RoomListProps> = ({
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Verificar que el nombre no esté vacío
     if (!newRoom.name.trim()) return;
 
     try {
       setLoading(true);
 
-      // Crear la nueva sala
-      const room = {
-        id: crypto.randomUUID(),
-        name: newRoom.name,
-        description: "",
-        theme: newRoom.theme || "General",
-        languages: [user.language],
-        createdBy: user.id,
-        createdAt: new Date(),
-        isPrivate: false,
-        inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        members: [user.id],
-      };
-
-      const response = await fetch(`${API_URL}/rooms`, {
+      // Enviar los datos al backend
+      const response = await fetch(`${API_URL}/api/rooms/create`, {
         method: "POST",
         headers: {
           "content-Type": "application/json",
         },
-        body: JSON.stringify(room),
+        body: JSON.stringify({
+          name: newRoom.name,
+          description: newRoom.description,
+          theme: newRoom.theme,
+          languages: newRoom.languages,
+          createdBy: user.id,
+          isPrivate: newRoom.isPrivate,
+        }),
       });
 
+      // Verificar si el backend respondió correctamente
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("No fue posible crear la sala");
+        throw new Error(data.message || "No fue posible crear la sala");
       }
 
-      const createdRoom = await response.json();
+      console.log("Sala creada:", data.room);
 
-      // Actualizar la lista local
+      const createdRoom: Room = data.room;
+
+      // Agregar la nueva sala al listado
       setRooms((prev) => [createdRoom, ...prev]);
 
-      // Actualizar la lista local
+      // Cerrar modal
       setIsModalOpen(false);
 
       // Limpiar formulario
-      setNewRoom({ name: "", theme: "" });
-      // Seleccionar la sala creada
+      setNewRoom({
+        name: "",
+        description: "",
+        theme: "General",
+        languages: ["es"],
+        isPrivate: false,
+      });
+      // Seleccionar la sala recién creada
       onSelectRoom(createdRoom);
-    } catch (err) {
-      alert("Error al crear la sala");
+    } catch (err: any) {
+      console.error("Error al crear sala:", err);
+      alert(err.message || "Error al crear la sala");
     } finally {
       setLoading(false);
     }
@@ -130,54 +152,39 @@ export const RoomList: React.FC<RoomListProps> = ({
       // Mostrar indicador de carga
       setLoading(true);
 
-      // Obtener todas las salas registradas en json-server
-      const response = await fetch(`${API_URL}/rooms`);
+      // Solicitar al backend unirse a la sala
+      const response = await fetch(`${API_URL}/api/rooms/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inviteCode: joinCode.trim(),
+          userId: user.id,
+        }),
+      });
 
-      // Verificar que la petición fue exitosa
+      // Convertir la respuesta del backend
+      const data = await response.json();
+
+      console.log("Datos enviados:", {
+        inviteCode: joinCode.trim(),
+        userId: user.id,
+      });
+
+      console.log("Respuesta del servidor:", data);
+
+      // Verificar si la petición fue exitosa
       if (!response.ok) {
-        throw new Error("No fue posible obtener las salas.");
+        throw new Error(data.message || "No fue posible obtener las sala.");
       }
 
-      // Convertir la respuesta en un arreglo de salas
-      const rooms: Room[] = await response.json();
+      // Obtener la sala actualizda
+      const room: Room = data.room;
 
-      // Buscar una sala cuyo código de invitación coincida
-      const room = rooms.find(
-        (r) => r.inviteCode.toUpperCase() === joinCode.trim().toUpperCase(),
-      );
-
-      // Si no existe la sala, mostrar un error
-      if (!room) {
-        throw new Error("El código de invitación no es válido.");
-      }
-
-      // Verificar si el usuario ya pertenece a la sala
-      if (!room.members.includes(user.id)) {
-        // Agregar el usuario al listado de miembros
-        const updatedMembers = [...room.members, user.id];
-
-        // Actualizar únicamente el arreglo de miembros
-        const updateResponse = await fetch(`${API_URL}/rooms/${room.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            members: updatedMembers,
-          }),
-        });
-
-        // Verificar que la actualización fue exitosa
-        if (!updateResponse.ok) {
-          throw new Error("No fue posible unirse a la sala.");
-        }
-
-        // Actualizar el objeto local para trabajar con la información más reciente
-        room.members = updatedMembers;
-      }
-
-      // Agregar la sala al listado local solamente si aún no existe
+      // Agregar la sala al listado local
       setRooms((prev) => {
+        // Evitar agregarla dos veces
         if (prev.some((r) => r.id === room.id)) {
           return prev;
         }

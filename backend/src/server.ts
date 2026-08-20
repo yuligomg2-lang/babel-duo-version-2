@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import dns from "node:dns";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import roomRoutes from "./routes/roomRoutes.js";
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
@@ -17,7 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas
+console.log("Montando rutas de rooms...");
 app.use("/api/auth", authRoutes);
+app.use("/api/rooms", roomRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {

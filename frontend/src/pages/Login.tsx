@@ -29,7 +29,7 @@ const Login = ({ user, onUserUpdate }: LoginProps) => {
 
   /**
    * Inicia sesión verificando las credenciales del usuario
-   * en json-server.
+   * en mongo - db.
    */
   const handleEmailSignIn = async (e: React.FormEvent) => {
     // Evitar que el formulario recargue la página
@@ -43,7 +43,6 @@ const Login = ({ user, onUserUpdate }: LoginProps) => {
 
     // Mostrar el indicador de carga
     setLoading(true);
-
     // Limpiar mensajes anteriores
     setError(null);
     setSuccessMessage(null);
@@ -59,33 +58,35 @@ const Login = ({ user, onUserUpdate }: LoginProps) => {
         throw { code: "auth/invalid-email" };
       }
 
-      // Obtener los usuarios registrados desde json-server
-      const response = await fetch(`${API_URL}/users`);
+      // Enviar las credenciales al backend
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password,
+        }),
+      });
 
-      // Verificar que la petición se realizó correctamente
+      // Obtener la respuesta del backend
+      const data = await response.json();
+
+      // Verificar si el login fue rechazado
       if (!response.ok) {
-        throw new Error("No fue posible obtener los usuarios.");
+        throw new Error(data.message || "No fue posible iniciar sesión.");
       }
 
-      // Convertir la respuesta en un arreglo de usuarios
-      const users: UserProfile[] = await response.json();
+      // Usuario devuelto por el backend
+      const user: UserProfile = {
+        ...data.user,
+        displayName: data.user.username,
+      };
 
-      // Buscar el usuario por su correo electrónico
-      const user = users.find(
-        (user) => user.email?.trim().toLowerCase() === normalizedEmail,
-      );
+      console.log("Usuario recibido del backend:", data.user);
 
-      // Verificar si el usuario existe
-      if (!user) {
-        throw { code: "auth/user-not-found" };
-      }
-
-      // Verificar que la contraseña sea correcta
-      if (user.password !== password) {
-        throw { code: "auth/wrong-password" };
-      }
-
-      // Guardar la sesión del usuario autenticado
+      //Guardar la sesion activa
       localStorage.setItem("babel_duo_user", JSON.stringify(user));
 
       // Mostrar mensaje de éxito
@@ -122,7 +123,7 @@ const Login = ({ user, onUserUpdate }: LoginProps) => {
   };
 
   /**
-   * Permite el acceso como usuario invitado creando una sesión temporal.
+   * Permite el acceso como usuario invitado creando u                                                                                                                                                                                                                                    na sesión temporal.
    */
   const handleGuestSignIn = async () => {
     // Activar indicador de carga mientras se realiza el proceso
@@ -138,7 +139,7 @@ const Login = ({ user, onUserUpdate }: LoginProps) => {
       // porque contiene la identidad temporal del invitado
       const savedGuest = localStorage.getItem("babel_duo_guest");
 
-      let guestUser: UserProfile | null = null;
+      let guestId: string | undefined;
 
       // --------------------------------------------------
       // CASO 1:
@@ -147,105 +148,46 @@ const Login = ({ user, onUserUpdate }: LoginProps) => {
       if (savedGuest) {
         // Convertimos el texto guardado en un objeto JavaScript
         const oldGuest: UserProfile = JSON.parse(savedGuest);
-
-        // Consultamos si ese invitado todavía existe en la base de datos
-        const response = await fetch(`${API_URL}/users/${oldGuest.id}`);
-
-        if (response.ok) {
-          // Recuperamos la información actual desde json-server
-          const databaseGuest: UserProfile = await response.json();
-
-          // Convertimos la fecha de expiración a milisegundos
-          const expirationTime = new Date(databaseGuest.expiresAt!).getTime();
-
-          // Verificamos si las 24 horas todavía no han pasado
-          if (expirationTime > Date.now()) {
-            // El invitado sigue siendo válido,
-            // entonces reutilizamos el mismo usuario
-            guestUser = databaseGuest;
-          } else {
-            // El invitado ya expiró,
-            // eliminamos ese registro de la base de datos
-            await fetch(`${API_URL}/users/${databaseGuest.id}`, {
-              method: "DELETE",
-            });
-
-            // Eliminamos también la referencia local
-            localStorage.removeItem("babel_duo_guest");
-          }
-        } else {
-          // Si el usuario no existe en la base de datos,
-          // limpiamos la referencia local
-          localStorage.removeItem("babel_duo_guest");
-        }
+        guestId = oldGuest.id;
       }
 
-      // --------------------------------------------------
-      // CASO 2:
-      // No existe invitado o el anterior expiró
-      // Creamos uno nuevo
-      // --------------------------------------------------
-      if (!guestUser) {
-        // Momento actual para calcular la expiración
-        const now = Date.now();
+      console.log("Guest ID enviado:", guestId);
+      console.log("URL:", `${API_URL}/api/auth/guest`);
 
-        // Crear nuevo usuario invitado
-        guestUser = {
-          id: crypto.randomUUID(),
+      //Solicitar al backend el acceso como invitado
+      const response = await fetch(`${API_URL}/api/auth/guest`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          guestId,
+        }),
+      });
 
-          displayName: `Invitado_${Math.floor(Math.random() * 10000)}`,
+      const data = await response.json();
 
-          language: "es",
-
-          interests: [],
-
-          isGuest: true,
-
-          // Fecha de creación
-          createdAt: new Date(now).toISOString(),
-
-          // Fecha límite:
-          // ahora + 24 horas
-          expiresAt: new Date(now + GUEST_SESSION_DURATION).toISOString(),
-        };
-
-        // Guardar el nuevo invitado en json-server
-        const response = await fetch(`${API_URL}/users`, {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify(guestUser),
-        });
-
-        if (!response.ok) {
-          throw new Error("No fue posible crear el usuario invitado");
-        }
+      console.log("status:", response.status);
+      console.log("Respuesta:", data);
+      // Verificar si el backend rechazó la petición
+      if (!response.ok) {
+        throw new Error(
+          data.message || "No fue posible ingresar como invitado.",
+        );
       }
 
-      // --------------------------------------------------
+      // Adaptar el usuario del backend al formato del frontend
+      const guestUser: UserProfile = {
+        ...data.user,
+        displayName: data.user.username,
+      };
+
       // Guardar sesión activa
-      // --------------------------------------------------
-
-      // Esta clave representa el usuario actualmente conectado
-      // Se elimina cuando el usuario hace logout
       localStorage.setItem("babel_duo_user", JSON.stringify(guestUser));
 
-      // --------------------------------------------------
-      // Guardar identidad del invitado
-      // --------------------------------------------------
-
-      // Esta clave mantiene el mismo invitado durante 24 horas
-      // aunque cierre sesión
+      // Guardar la identidad del invitado
+      // para poder reutilizarlo durante las 24 horas
       localStorage.setItem("babel_duo_guest", JSON.stringify(guestUser));
-
-      // Actualizar el estado global de la aplicación
-      onUserUpdate(guestUser);
-
-      // Ir a la página principal de la aplicación
-      navigate("/chat");
 
       // Mostrar mensaje de confirmación
       setSuccessMessage("Has ingresado como invitado.");

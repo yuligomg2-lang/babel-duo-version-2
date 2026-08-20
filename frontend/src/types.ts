@@ -22,11 +22,11 @@ export interface Room {
   theme: string;
   languages: string[];
   createdBy: string;
-  createdAt: any;
+  createdAt: string;
   isPrivate: boolean;
   inviteCode: string;
   members: string[];
-  expiresAt?: any; // For guest-only links
+  expiresAt?: string; // For guest-only links
   typing?: Record<string, string>; // uid -> displayName
 }
 

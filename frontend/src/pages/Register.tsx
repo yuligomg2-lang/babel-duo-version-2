@@ -52,55 +52,30 @@ function Register() {
         throw { code: "auth/weak-password" };
       }
 
-      /// Obtener la lista de usuarios registrados desde json-server
-      const response = await fetch(`${API_URL}/users`);
-
-      // Verificar que la petición se realizó correctamente
-      if (!response.ok) {
-        throw new Error("No fue posible obtener los usuarios.");
-      }
-
-      // Convertir la respuesta JSON en un arreglo de usuarios
-      const users: UserProfile[] = await response.json();
-
       // Normalizar el correo
       const normalizedEmail = email.trim().toLowerCase();
 
-      // Verificar si el correo ya existe
-      const userExists = users.some(
-        (user) => user.email?.trim().toLowerCase() === normalizedEmail,
-      );
-
-      if (userExists) {
-        throw { code: "auth/email-already-in-use" };
-      }
-
-      // Crear usuario
-      const newUser: UserProfile = {
-        id: crypto.randomUUID(),
-        displayName,
-        email: normalizedEmail,
-        password,
-        language: "es",
-        interests: [],
-        isGuest: false,
-        createdAt: new Date().toISOString(),
-      };
-
-      console.log("Nuevo usuario:", newUser);
-
       // Enviar el nuevo usuario al servidor mediante una petición POST
-      const saveResponse = await fetch(`${API_URL}/users`, {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify({
+          username: displayName.trim(),
+          email: normalizedEmail,
+          password,
+        }),
       });
 
+      const data = await response.json();
+
       // Verificar que el usuario fue registrado correctamente
-      if (!saveResponse.ok) {
-        throw new Error("No fue posible registrar el usuario");
+      if (!response.ok) {
+        if (response.status === 409) {
+          throw { code: "auth/email-already-in-use" };
+        }
+        throw new Error(data.message || "No fue posible registrar el usuario.");
       }
 
       // Mostrar mensaje de éxito
@@ -116,7 +91,7 @@ function Register() {
       // Cambiar al formulario de inicio de sesión
       setTimeout(() => {
         navigate("/login");
-      }, 1500);
+      }, 2000);
     } catch (err: any) {
       if (err.code === "auth/email-already-in-use") {
         setError("Este correo electrónico ya está registrado.");

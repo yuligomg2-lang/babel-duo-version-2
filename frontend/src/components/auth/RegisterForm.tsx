@@ -86,6 +86,14 @@ export default function RegisterForm({
           </div>
         )}
 
+        {/* Mensaje de registro exitoso */}
+        {successMessage && (
+          <div className="mb-4 p-3.5 bg-green-50 border border-green-100 text-green-700 text-xs rounded-2xl flex items-center gap-2 font-semibold">
+            <span>✓</span>
+            <span>{successMessage}</span>
+          </div>
+        )}
+
         {/* Campo para ingresar el nombre del usuario */}
         <div className="relative mb-3.5">
           <UserIcon className="w-4.5 h-4.5 text-gray-400 absolute left-4.5 top-1/2 -translate-y-1/2 stroke-[1.5]" />
